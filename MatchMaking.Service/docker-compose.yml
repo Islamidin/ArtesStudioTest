@@ -1,0 +1,16 @@
+services:
+  matchmaking.service:
+    build:
+      context: .
+      dockerfile: MatchMaking.Service/Dockerfile
+    container_name: matchmaking-service
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Redis=redis:6379,abortConnect=false
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      - redis
+      - kafka

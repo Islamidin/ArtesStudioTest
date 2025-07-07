@@ -1,0 +1,89 @@
+# .dockerignore for C#/.NET projects (MatchMaking.Service, MatchMaking.Worker)
+# 1. Version control
+.git/
+.gitignore
+.svn/
+.hg/
+
+# 2. IDE and editor files
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vs/
+*.vsidx
+*.v2
+*.dtbcache.v2
+*.futdcache.v2
+*.suo
+*.DS_Store
+*.swp
+*.swo
+
+# 3. Build outputs and development artifacts
+bin/
+obj/
+TestResults/
+dist/
+build/
+out/
+debug/
+*.log
+
+# 4. Docker and Compose files (do not copy these into images)
+Dockerfile*
+docker-compose*
+*.dcproj
+
+# 5. Environment and secrets
+.env*
+*.env
+*.pem
+*.key
+*.crt
+config.local.*
+*.local.yml
+
+# 6. Temporary and cache files
+tmp/
+temp/
+*.tmp
+*.db
+*.db-shm
+*.db-wal
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# 7. Documentation and markdown
+README*
+*.md
+docs/
+
+# 8. Project-specific and miscellaneous
+*.http
+*.bak
+*.old
+*.orig
+*.rej
+*.bin
+
+# 9. Local development
+.local/
+local/
+
+# 10. Exclude test binaries and coverage
+coverage/
+*.coverage
+
+# 11. Exclude solution/user settings
+*.DotSettings.user
+
+# 12. Exclude test folders (if any)
+test/
+tests/
+
+# End of .dockerignore
