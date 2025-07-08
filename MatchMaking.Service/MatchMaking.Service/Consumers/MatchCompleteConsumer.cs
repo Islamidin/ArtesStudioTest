@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Confluent.Kafka;
 using MatchMaking.Service.Models;
 using MatchMaking.Service.Store;
 
@@ -31,8 +30,7 @@ public class MatchCompleteConsumer : BackgroundService
             {
                 try
                 {
-                    //var result = kafka.Consume(stoppingToken);
-                    var result = new ConsumeResult<Ignore, string>();
+                    var result = kafka.Consume(stoppingToken);
                     if (string.IsNullOrWhiteSpace(result.Message?.Value))
                     {
                         continue;

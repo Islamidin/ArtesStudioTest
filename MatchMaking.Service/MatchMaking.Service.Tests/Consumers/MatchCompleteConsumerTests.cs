@@ -1,12 +1,8 @@
 ﻿using System.Text.Json;
-using Confluent.Kafka;
 using MatchMaking.Service.Consumers;
 using MatchMaking.Service.Models;
 using MatchMaking.Service.Store;
 using Microsoft.Extensions.Logging;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
-using NUnit.Framework;
 
 namespace MatchMaking.Service.Tests.Consumers;
 

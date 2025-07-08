@@ -3,12 +3,12 @@ using MatchMaking.Service.Consumers;
 using MatchMaking.Service.Models;
 using MatchMaking.Service.Producers;
 using MatchMaking.Service.Store;
-using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddRateLimiter(options =>
@@ -60,5 +60,18 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHealthChecks("/health");
+app.MapGet("/", () => "Matchmaking Service is running!");
 
-app.Run();
+Console.WriteLine(">>> Args: " + string.Join(" ", args));
+Console.WriteLine(">>> Starting web app on http://+:9998");
+
+try
+{
+    Console.WriteLine(">>> Starting web app...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($">>> ERROR during app.Run: {ex}");
+    throw;
+}

@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using MatchMaking.Service.Consumers;
 using MatchMaking.Service.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NUnit.Framework;
@@ -12,6 +13,7 @@ public class KafkaConsumerWrapperTests
 {
     private IConsumer<Ignore, string> consumer = null!;
     private IConsumerFactory factory = null!;
+    private ILogger<KafkaConsumerWrapper> logger = null!;
     private KafkaSettings settings = null!;
     private KafkaConsumerWrapper wrapper = null!;
 
@@ -24,8 +26,9 @@ public class KafkaConsumerWrapperTests
         consumer = Substitute.For<IConsumer<Ignore, string>>();
         factory = Substitute.For<IConsumerFactory>();
         factory.CreateConsumer(Arg.Any<ConsumerConfig>()).Returns(consumer);
+        logger = Substitute.For<ILogger<KafkaConsumerWrapper>>();
 
-        wrapper = new(options, factory);
+        wrapper = new(options, factory, logger);
     }
 
     [Test]
