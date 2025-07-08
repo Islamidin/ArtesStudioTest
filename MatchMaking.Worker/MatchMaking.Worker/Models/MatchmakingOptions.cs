@@ -1,3 +1,6 @@
 ﻿namespace MatchMaking.Worker.Models;
 
-public record MatchmakingOptions(int UsersPerMatch);
+public record MatchmakingOptions
+{
+    public int UsersPerMatch { get; init; } = 3;
+}

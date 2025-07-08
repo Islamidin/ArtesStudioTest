@@ -35,10 +35,9 @@ public class MatchController : ControllerBase
             return BadRequest();
         }
 
-        var message = JsonSerializer.Serialize(new { userId });
         try
         {
-            await kafkaProducer.ProduceAsync(MatchmakingRequestTopic, message);
+            await kafkaProducer.ProduceAsync(MatchmakingRequestTopic, userId);
             logger.LogInformation("Match search request published to Kafka for userId: {UserId}", userId);
         }
         catch (Exception ex)

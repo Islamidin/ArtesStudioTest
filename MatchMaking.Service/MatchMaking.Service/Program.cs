@@ -3,6 +3,7 @@ using MatchMaking.Service.Consumers;
 using MatchMaking.Service.Models;
 using MatchMaking.Service.Producers;
 using MatchMaking.Service.Store;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,10 +61,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHealthChecks("/health");
-app.MapGet("/", () => "Matchmaking Service is running!");
-
-Console.WriteLine(">>> Args: " + string.Join(" ", args));
-Console.WriteLine(">>> Starting web app on http://+:9998");
 
 try
 {

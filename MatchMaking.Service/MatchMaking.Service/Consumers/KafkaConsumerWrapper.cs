@@ -14,6 +14,9 @@ public class KafkaConsumerWrapper : IKafkaConsumerWrapper, IDisposable
                                 IConsumerFactory factory,
                                 ILogger<KafkaConsumerWrapper> logger)
     {
+        logger.LogInformation("options.Value.BootstrapServers: {ValueBootstrapServers}", options.Value.BootstrapServers);
+        logger.LogInformation("options.Value.GroupId: {ValueGroupId}", options.Value.GroupId);
+
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         var config = new ConsumerConfig

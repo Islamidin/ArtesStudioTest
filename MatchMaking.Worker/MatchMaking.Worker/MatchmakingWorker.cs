@@ -2,7 +2,6 @@ using System.Text.Json;
 using MatchMaking.Worker.Consumers;
 using MatchMaking.Worker.Models;
 using MatchMaking.Worker.Producers;
-using MatchMaking.Worker.Store;
 using Microsoft.Extensions.Options;
 
 namespace MatchMaking.Worker;
@@ -11,7 +10,6 @@ public class MatchmakingWorker : BackgroundService
 {
     private readonly IKafkaConsumerWrapper consumer;
     private readonly ILogger<MatchmakingWorker> logger;
-    private readonly IMatchStore matchStore;
     private readonly IOptions<MatchmakingOptions> options;
     private readonly IKafkaProducer producer;
     private readonly List<string> queue = [];
@@ -19,14 +17,12 @@ public class MatchmakingWorker : BackgroundService
     public MatchmakingWorker(ILogger<MatchmakingWorker> logger,
                              IOptions<MatchmakingOptions> options,
                              IKafkaProducer producer,
-                             IKafkaConsumerWrapper consumer,
-                             IMatchStore matchStore)
+                             IKafkaConsumerWrapper consumer)
     {
         this.logger = logger;
         this.options = options;
         this.producer = producer;
         this.consumer = consumer;
-        this.matchStore = matchStore;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -52,7 +48,6 @@ public class MatchmakingWorker : BackgroundService
 
                     var message = JsonSerializer.Serialize(match);
                     await producer.ProduceAsync("matchmaking.complete", message);
-                    await matchStore.StoreAsync(match, message);
 
                     logger.LogInformation("Match created: {MatchId} with users: {Users}", match.MatchId, string.Join(",", match.UserIds));
                     queue.RemoveRange(0, options.Value.UsersPerMatch);

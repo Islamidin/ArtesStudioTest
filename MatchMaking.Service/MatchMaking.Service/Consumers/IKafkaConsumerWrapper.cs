@@ -9,4 +9,6 @@ public interface IKafkaConsumerWrapper
     void Subscribe(string topic);
 
     void Close();
+
+    void Commit(ConsumeResult<Ignore, string> result);
 }
