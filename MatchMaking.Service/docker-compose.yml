@@ -1,0 +1,142 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 100
+      ZK_JVMFLAGS: "-Xms1G -Xmx2G -XX:+UseG1GC"
+      ZOOKEEPER_SNAP_COUNT: 100000
+      ZOOKEEPER_LOG_LEVEL: INFO
+      KAFKA_OPTS: "-Dzookeeper.4lw.commands.whitelist=ruok,stat,conf,srvr"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok || exit 1"]
+      interval: 10s
+      timeout: 30s
+      retries: 20
+      start_period: 40s
+    restart: unless-stopped
+
+  zookeeper-healthcheck:
+    image: busybox
+    container_name: zookeeper-healthcheck
+    depends_on:
+      - zookeeper
+    command: >
+      sh -c "until (echo stat | nc zookeeper 2181 | grep -q Mode); do
+        echo 'Waiting for ZooKeeper...';
+        sleep 5;
+      done;
+      echo 'ZooKeeper is ready!'"
+    restart: on-failure
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: "-Xms2G -Xmx4G"
+      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: 10000
+      KAFKA_LOG_FLUSH_INTERVAL_MS: 1000
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 60s
+      retries: 20
+      start_period: 90s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning --requirepass ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 20
+      start_period: 10s
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8082:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./Scripts:/scripts
+    entrypoint: [ "sh", "/scripts/create-topics.sh" ]
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'Checking Kafka topics...' && kafka-topics --bootstrap-server kafka:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    
+  matchmaking.service:
+    build:
+      context: ./MatchMaking.Service/MatchMaking.Service
+    container_name: matchmaking-service
+    ports:
+      - "9998:9998"
+      - "9999:9999"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:9998
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - ConnectionStrings__Redis=redis:6379,abortConnect=false,connectTimeout=5000
+      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__GroupId=matchmaking-service
+      - Kafka__EnableAutoCommit=false
+      - Kafka__SessionTimeoutMs=30000
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9998/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+services:
+  matchmaking.worker:
+    build:
+      context: .
+      dockerfile: MatchMaking.Worker/Dockerfile
+    container_name: matchmaking-worker
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Redis=redis:6379,abortConnect=false
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      - kafka
+      - redis
